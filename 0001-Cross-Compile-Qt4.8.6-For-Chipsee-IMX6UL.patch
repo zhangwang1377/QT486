@@ -1,0 +1,146 @@
+From c0317f34856a0733068fe377e53a7b4462d08880 Mon Sep 17 00:00:00 2001
+From: Nicky <leavs_o@126.com>
+Date: Mon, 25 Sep 2017 15:32:57 +0800
+Subject: [PATCH] Cross Compile Qt4.8.6 For Chipsee IMX6UL
+
+---
+ config.sh                                  | 32 +++++++++++++++++++++++
+ mkspecs/qws/linux-imx6-g++/qmake.conf      | 36 +++++++++++++++++++++++++
+ mkspecs/qws/linux-imx6-g++/qplatformdefs.h | 42 ++++++++++++++++++++++++++++++
+ 3 files changed, 110 insertions(+)
+ create mode 100755 config.sh
+ create mode 100755 mkspecs/qws/linux-imx6-g++/qmake.conf
+ create mode 100755 mkspecs/qws/linux-imx6-g++/qplatformdefs.h
+
+diff --git a/config.sh b/config.sh
+new file mode 100755
+index 0000000..cd3e1d3
+--- /dev/null
++++ b/config.sh
+@@ -0,0 +1,32 @@
++#!/bin/sh
++./configure \
++-verbose \
++-release \
++-opensource \
++-confirm-license \
++-shared \
++-fast \
++-embedded arm -xplatform qws/linux-imx6-g++ \
++-qt-sql-sqlite \
++-no-qt3support \
++-depths 16,18,24,32 \
++-optimized-qmake \
++-no-pch \
++-system-libjpeg \
++-system-libpng \
++-little-endian -host-little-endian \
++-no-nas-sound \
++-no-libtiff -no-libmng \
++-no-mmx -no-sse -no-sse2 \
++-no-3dnow \
++-no-webkit \
++-no-qvfb \
++-no-phonon \
++-no-nis \
++-no-cups \
++-no-glib \
++-no-icu \
++-no-separate-debug-info \
++-nomake examples -nomake tools -nomake docs -nomake tests -make libs \
++-make demos -gtkstyle -openssl-linked -system-zlib -qt-freetype \
++-qt-mouse-tslib
+\ No newline at end of file
+diff --git a/mkspecs/qws/linux-imx6-g++/qmake.conf b/mkspecs/qws/linux-imx6-g++/qmake.conf
+new file mode 100755
+index 0000000..e46a2fe
+--- /dev/null
++++ b/mkspecs/qws/linux-imx6-g++/qmake.conf
+@@ -0,0 +1,36 @@
++#
++# qmake configuration for building with arm-none-linux-gnueabi-g++
++#
++
++#export PATH=/opt/fsl-imx-x11/a7/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/fsl-imx-x11/a7/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi:$PATH
++
++include(../../common/linux.conf)
++include(../../common/gcc-base-unix.conf)
++include(../../common/g++-unix.conf)
++include(../../common/qws.conf)
++
++ROOTFS = /opt/fsl-imx-x11/3.14.52-1.1.1/sysroots/cortexa7hf-vfp-neon-poky-linux-gnueabi
++
++# modifications to g++.conf
++QMAKE_CC                = arm-poky-linux-gnueabi-gcc --sysroot=$$ROOTFS
++QMAKE_CXX               = arm-poky-linux-gnueabi-g++ --sysroot=$$ROOTFS
++QMAKE_LINK              = arm-poky-linux-gnueabi-g++ --sysroot=$$ROOTFS
++QMAKE_LINK_SHLIB        = arm-poky-linux-gnueabi-g++ --sysroot=$$ROOTFS
++
++# modifications to linux.conf
++QMAKE_AR                = arm-poky-linux-gnueabi-ar cqs
++QMAKE_OBJCOPY           = arm-poky-linux-gnueabi-objcopy
++QMAKE_STRIP             = arm-poky-linux-gnueabi-strip
++
++QMAKE_INCDIR            = $$ROOTFS/usr/include
++QMAKE_LIBDIR            = $$ROOTFS/usr/lib
++QMAKE_LIBDIR           += $$ROOTFS/lib
++
++IMX6_CFLAGS             = -march=armv7-a -mfloat-abi=hard -mfpu=neon -mtune=cortex-a7 -DLINUX=1 -DEGL_API_FB=1
++IMX6_CFLAGS_RELEASE     = -O2 $$IMX6_CFLAGS
++QMAKE_CFLAGS_RELEASE   += $$IMX6_CFLAGS_RELEASE
++QMAKE_CXXFLAGS_RELEASE += $$IMX6_CFLAGS_RELEASE
++QMAKE_CFLAGS_DEBUG     += $$IMX6_CFLAGS
++QMAKE_CXXFLAGS_DEBUG   += $$IMX6_CFLAGS
++
++load(qt_config)
+diff --git a/mkspecs/qws/linux-imx6-g++/qplatformdefs.h b/mkspecs/qws/linux-imx6-g++/qplatformdefs.h
+new file mode 100755
+index 0000000..461f3d5
+--- /dev/null
++++ b/mkspecs/qws/linux-imx6-g++/qplatformdefs.h
+@@ -0,0 +1,42 @@
++/****************************************************************************
++**
++** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the qmake spec of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia.  For licensing terms and
++** conditions see http://qt.digia.com/licensing.  For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights.  These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 3.0 as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU General Public License version 3.0 requirements will be
++** met: http://www.gnu.org/copyleft/gpl.html.
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "../../linux-g++/qplatformdefs.h"
+-- 
+1.9.1
+
